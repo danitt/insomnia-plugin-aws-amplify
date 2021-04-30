@@ -1,20 +1,36 @@
 import { IContext } from 'types';
 import { loginUser } from './auth';
 
-/**
- * Load JWT from store if exists
- */
-async function loginUserWithContext(context: IContext, ...params: Parameters<typeof loginUser>): ReturnType<typeof loginUser> {
-  const storeKey = params.join(';');
-  const storedUserDataStr = await context.store.getItem(storeKey);
-  if (storedUserDataStr) {
-    const storedUserData = JSON.parse(storedUserDataStr);
-    return storedUserData;
-  }
-  const result = await loginUser(...params);
-  await context.store.setItem(storeKey, JSON.stringify(result));
+// Cache Intervals
+const ONE_HOUR_MS = 1000 * 60 * 60;
+const EIGHT_HOURS_MS = ONE_HOUR_MS * 8;
+const ONE_WEEK_MS = ONE_HOUR_MS * 24 * 7;
 
-  return result;
+interface IStoreCache {
+  time: number;
+  accessToken: string;
+}
+type LoginUserWithContextParams = [...Parameters<typeof loginUser>, number];
+async function loginUserWithContext(context: IContext, ...params: LoginUserWithContextParams): Promise<string> {
+  const storeKey = params.join(';');
+  const cacheDataStr = await context.store.getItem(storeKey);
+  if (cacheDataStr) {
+    const { time, accessToken }: IStoreCache = JSON.parse(cacheDataStr);
+    const cacheExpiry = Number(params.slice(-1)) ?? ONE_HOUR_MS;
+    const isValid = (time + cacheExpiry) >= new Date().getTime();
+   if (isValid) {
+     return accessToken;
+   }
+  }
+
+  const loginParams = params.slice(0, -1) as Parameters<typeof loginUser>;
+  const { accessToken } = await loginUser(...loginParams);
+  const cacheData: IStoreCache = {
+    time: new Date().getTime(),
+    accessToken,
+  }
+  await context.store.setItem(storeKey, JSON.stringify(cacheData));
+  return accessToken;
 }
 
 export const templateTags = [
@@ -48,6 +64,26 @@ export const templateTags = [
         displayName: 'ClientId',
         type: 'string',
         validate: (arg: string) => arg ? '' : 'Required',
+      },
+      {
+        displayName: 'CacheExpiry',
+        type: 'enum',
+        validate: (arg: string) => arg ? '' : 'Required',
+        defaultValue: ONE_HOUR_MS,
+        options: [
+          {
+            displayName: '1 Hour',
+            value: ONE_HOUR_MS,
+          },
+          {
+            displayName: '8 Hours',
+            value: EIGHT_HOURS_MS,
+          },
+          {
+            displayName: '1 Week',
+            value: ONE_WEEK_MS,
+          },
+        ]
       },
     ],
   },

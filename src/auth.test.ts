@@ -11,14 +11,14 @@ const CLIENTID = String(process.env.CLIENTID);
 
 describe('Authenticates', () => {
   it('Logs in with test credentials', async () => {
-    const { IdToken, AccessToken } = await loginUser(
+    const { idToken, accessToken } = await loginUser(
       USERNAME,
       PASSWORD,
       REGION,
       USERPOOLID,
       CLIENTID,
     );
-    expect(IdToken).toBeTruthy();
-    expect(AccessToken).toBeTruthy();
+    expect(idToken).toBeTruthy();
+    expect(accessToken).toBeTruthy();
   });
 });
