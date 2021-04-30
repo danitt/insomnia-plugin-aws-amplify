@@ -1,0 +1,11 @@
+###
+# Excludes files from being published to NPM registry
+###
+
+# Ignore all by default
+**/*
+
+# Whitelist
+!plugin.js
+!README.md
+!yarn.lock

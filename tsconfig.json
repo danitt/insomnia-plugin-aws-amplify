@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "baseUrl": "src",
+    "sourceMap": true,
+    "target": "es6",
+    "lib": [
+      "esnext"
+    ],
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true
+  }
+}
