@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-aws-amplify",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Insomnia plugin for signing in via AWS Amplify",
   "author": "Dan <dan@danitt.com>",
   "license": "ISC",

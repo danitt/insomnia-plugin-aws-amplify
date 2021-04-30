@@ -12,18 +12,18 @@ interface IStoreCache {
 }
 type LoginUserWithContextParams = [...Parameters<typeof loginUser>, number];
 async function loginUserWithContext(context: IContext, ...params: LoginUserWithContextParams): Promise<string> {
-  const storeKey = params.join(';');
+  const cacheExpiry = Number(params.slice(-1)) ?? ONE_HOUR_MS;
+  const loginParams = params.slice(0, -1) as Parameters<typeof loginUser>;
+  const storeKey = loginParams.join(';');
   const cacheDataStr = await context.store.getItem(storeKey);
   if (cacheDataStr) {
     const { time, accessToken }: IStoreCache = JSON.parse(cacheDataStr);
-    const cacheExpiry = Number(params.slice(-1)) ?? ONE_HOUR_MS;
     const isValid = (time + cacheExpiry) >= new Date().getTime();
    if (isValid) {
      return accessToken;
    }
   }
 
-  const loginParams = params.slice(0, -1) as Parameters<typeof loginUser>;
   const { accessToken } = await loginUser(...loginParams);
   const cacheData: IStoreCache = {
     time: new Date().getTime(),
@@ -71,6 +71,10 @@ export const templateTags = [
         validate: (arg: string) => arg ? '' : 'Required',
         defaultValue: ONE_HOUR_MS,
         options: [
+          {
+            displayName: 'No Caching',
+            value: 1000,
+          },
           {
             displayName: '1 Hour',
             value: ONE_HOUR_MS,
