@@ -19,7 +19,7 @@ export async function loginUser(
 
   const user = await Auth.signIn(Username, Password);
   const authId = user?.username;
-  const userId = user?.attributes?.['custom:user_id'];
+  const userId = user?.signInUserSession?.idToken?.payload?.['custom:user_id'];
   const idToken = user?.signInUserSession?.idToken?.jwtToken;
   const accessToken = user?.signInUserSession?.accessToken?.jwtToken;
 
