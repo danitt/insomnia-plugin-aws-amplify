@@ -1,12 +1,14 @@
 import { Amplify, Auth } from 'aws-amplify';
 
+export type LoginUserResponse = { authId: string, userId?: string, idToken: string, accessToken: string };
+
 export async function loginUser(
   Username: string,
   Password: string,
   Region: string,
   UserPoolId: string,
   ClientId: string
-): Promise<{ idToken: string, accessToken: string }> {
+): Promise<LoginUserResponse> {
   Amplify.configure({
     Auth: {
       region: Region,
@@ -16,6 +18,8 @@ export async function loginUser(
   });
 
   const user = await Auth.signIn(Username, Password);
+  const authId = user?.username;
+  const userId = user?.attributes?.['custom:user_id'];
   const idToken = user?.signInUserSession?.idToken?.jwtToken;
   const accessToken = user?.signInUserSession?.accessToken?.jwtToken;
 
@@ -23,7 +27,11 @@ export async function loginUser(
     throw Error(`Invalid auth response: ${JSON.stringify(user, null, 2)}`);
   }
 
+  console.info({ user: JSON.stringify(user, null, 2) });
+
   return {
+    authId,
+    userId,
     idToken,
     accessToken,
   }

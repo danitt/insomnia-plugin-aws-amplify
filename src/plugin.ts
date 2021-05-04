@@ -1,36 +1,57 @@
 import { IContext } from 'types';
-import { loginUser } from './auth';
+import { loginUser, LoginUserResponse } from './auth';
 
 // Cache Intervals
 const ONE_HOUR_MS = 1000 * 60 * 60;
 const EIGHT_HOURS_MS = ONE_HOUR_MS * 8;
 const ONE_WEEK_MS = ONE_HOUR_MS * 24 * 7;
-
-interface IStoreCache {
+interface IStoreCache extends LoginUserResponse {
   time: number;
-  accessToken: string;
 }
-type LoginUserWithContextParams = [...Parameters<typeof loginUser>, number];
-async function loginUserWithContext(context: IContext, ...params: LoginUserWithContextParams): Promise<string> {
-  const cacheExpiry = Number(params.slice(-1)) ?? ONE_HOUR_MS;
-  const loginParams = params.slice(0, -1) as Parameters<typeof loginUser>;
-  const storeKey = loginParams.join(';');
+async function loginUserWithContext(
+  context: IContext,
+  Username: string,
+  Password: string,
+  Region: string,
+  UserPoolId: string,
+  ClientId: string,
+  CacheInterval: number,
+): Promise<ReturnType<typeof loginUser>> {
+  // Validate Inputs
+  const inputs = { Username, Password, Region, UserPoolId, ClientId };
+  for (const [key, val] of Object(inputs).entries()) {
+    if (val === undefined || val === '') {
+      throw Error(`${key} cannot be empty`);
+    }
+  };
+
+  // Restore cached auth
+  const storeKey = [Username, Password, Region, UserPoolId, ClientId].join(';');
   const cacheDataStr = await context.store.getItem(storeKey);
   if (cacheDataStr) {
-    const { time, accessToken }: IStoreCache = JSON.parse(cacheDataStr);
-    const isValid = (time + cacheExpiry) >= new Date().getTime();
+    const { time, ...loginResponse }: IStoreCache = JSON.parse(cacheDataStr);
+    const isValid = (time + CacheInterval) >= new Date().getTime();
    if (isValid) {
-     return accessToken;
+     console.info('Restoring from cache');
+     return loginResponse;
    }
   }
 
-  const { accessToken } = await loginUser(...loginParams);
+  // Throttle Queries
+  const lastQueryTime = Number(await context.store.getItem('lastQueryTime'));
+  if (lastQueryTime && (lastQueryTime + 1000) > new Date().getTime()) {
+    throw Error('Auth queries /sec exceeded');
+  }
+  await context.store.setItem('lastQueryTime', String(new Date().getTime()));
+
+  // Request Auth
+  const loginResponse = await loginUser(Username, Password, Region, UserPoolId, ClientId);
   const cacheData: IStoreCache = {
     time: new Date().getTime(),
-    accessToken,
+    ...loginResponse
   }
   await context.store.setItem(storeKey, JSON.stringify(cacheData));
-  return accessToken;
+  return loginResponse;
 }
 
 export const templateTags = [
