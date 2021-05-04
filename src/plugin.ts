@@ -15,10 +15,11 @@ async function loginUserWithContext(
   Region: string,
   UserPoolId: string,
   ClientId: string,
-  CacheInterval: number,
+  CacheInterval: string,
   ReturnValue: 'accessToken' | 'idToken' | 'authId' | 'userId',
 ): Promise<LoginUserResponse[keyof LoginUserResponse]> {
   const nowMs = new Date().getTime();
+  const cacheIntervalMs = Number(CacheInterval);
 
   // Validate Inputs
   const inputs = { Username, Password, Region, UserPoolId, ClientId };
@@ -33,9 +34,9 @@ async function loginUserWithContext(
   const cacheDataStr = await context.store.getItem(storeKey);
   if (cacheDataStr) {
     const { time, ...loginResponse }: IStoreCache = JSON.parse(cacheDataStr);
-    const isValid = (time + CacheInterval) >= nowMs;
+    const isValid = (time + cacheIntervalMs) >= nowMs;
    if (isValid) {
-     console.info('Restoring from cache', { time, CacheInterval, nowMs });
+     console.info('Restoring from cache', { time, cacheIntervalMs, nowMs, loginResponse });
      return loginResponse[ReturnValue];
    }
   }
