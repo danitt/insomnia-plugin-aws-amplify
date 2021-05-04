@@ -7,3 +7,4 @@ Inspired by [insomnia-plugin-aws-amplify-auth](https://github.com/mbise1993/inso
 - plugin dependencies are now bundled, and no longer crashes on install when react-native is not globally available
 - authentication returns JWT access token, as opposed to generated cookies
 - flexible token caching expiry options added
+- customisable return properties
