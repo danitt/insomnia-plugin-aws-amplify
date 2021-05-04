@@ -16,7 +16,8 @@ async function loginUserWithContext(
   UserPoolId: string,
   ClientId: string,
   CacheInterval: number,
-): Promise<ReturnType<typeof loginUser>> {
+  ReturnValue: 'accessToken' | 'idToken' | 'authId' | 'userId',
+): Promise<LoginUserResponse[keyof LoginUserResponse]> {
   // Validate Inputs
   const inputs = { Username, Password, Region, UserPoolId, ClientId };
   for (const [key, val] of Object.entries(inputs)) {
@@ -33,7 +34,7 @@ async function loginUserWithContext(
     const isValid = (time + CacheInterval) >= new Date().getTime();
    if (isValid) {
      console.info('Restoring from cache');
-     return loginResponse;
+     return loginResponse[ReturnValue];
    }
   }
 
@@ -51,7 +52,7 @@ async function loginUserWithContext(
     ...loginResponse
   }
   await context.store.setItem(storeKey, JSON.stringify(cacheData));
-  return loginResponse;
+  return loginResponse[ReturnValue];
 }
 
 export const templateTags = [
@@ -107,6 +108,30 @@ export const templateTags = [
           {
             displayName: '1 Week',
             value: ONE_WEEK_MS,
+          },
+        ]
+      },
+      {
+        displayName: 'ReturnValue',
+        type: 'enum',
+        validate: (arg: string) => arg ? '' : 'Required',
+        defaultValue: 'accessToken',
+        options: [
+          {
+            displayName: 'AccessToken',
+            value: 'accessToken',
+          },
+          {
+            displayName: 'IdToken',
+            value: 'idToken',
+          },
+          {
+            displayName: 'AuthId',
+            value: 'authId',
+          },
+          {
+            displayName: 'UserId',
+            value: 'userId',
           },
         ]
       },
