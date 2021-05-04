@@ -19,7 +19,7 @@ async function loginUserWithContext(
 ): Promise<ReturnType<typeof loginUser>> {
   // Validate Inputs
   const inputs = { Username, Password, Region, UserPoolId, ClientId };
-  for (const [key, val] of Object(inputs).entries()) {
+  for (const [key, val] of Object.entries(inputs)) {
     if (val === undefined || val === '') {
       throw Error(`${key} cannot be empty`);
     }
