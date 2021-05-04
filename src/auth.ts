@@ -27,7 +27,7 @@ export async function loginUser(
     throw Error(`Invalid auth response: ${JSON.stringify(user, null, 2)}`);
   }
 
-  console.info({ user: JSON.stringify(user, null, 2) });
+  console.info({ user, authId, userId, idToken, accessToken });
 
   return {
     authId,

@@ -18,6 +18,8 @@ async function loginUserWithContext(
   CacheInterval: number,
   ReturnValue: 'accessToken' | 'idToken' | 'authId' | 'userId',
 ): Promise<LoginUserResponse[keyof LoginUserResponse]> {
+  const nowMs = new Date().getTime();
+
   // Validate Inputs
   const inputs = { Username, Password, Region, UserPoolId, ClientId };
   for (const [key, val] of Object.entries(inputs)) {
@@ -31,24 +33,24 @@ async function loginUserWithContext(
   const cacheDataStr = await context.store.getItem(storeKey);
   if (cacheDataStr) {
     const { time, ...loginResponse }: IStoreCache = JSON.parse(cacheDataStr);
-    const isValid = (time + CacheInterval) >= new Date().getTime();
+    const isValid = (time + CacheInterval) >= nowMs;
    if (isValid) {
-     console.info('Restoring from cache');
+     console.info('Restoring from cache', { time, CacheInterval, nowMs });
      return loginResponse[ReturnValue];
    }
   }
 
   // Throttle Queries
   const lastQueryTime = Number(await context.store.getItem('lastQueryTime'));
-  if (lastQueryTime && (lastQueryTime + 1000) > new Date().getTime()) {
+  if (lastQueryTime && (lastQueryTime + 1000) > nowMs) {
     throw Error('Auth queries /sec exceeded');
   }
-  await context.store.setItem('lastQueryTime', String(new Date().getTime()));
+  await context.store.setItem('lastQueryTime', String(nowMs));
 
   // Request Auth
   const loginResponse = await loginUser(Username, Password, Region, UserPoolId, ClientId);
   const cacheData: IStoreCache = {
-    time: new Date().getTime(),
+    time: nowMs,
     ...loginResponse
   }
   await context.store.setItem(storeKey, JSON.stringify(cacheData));
