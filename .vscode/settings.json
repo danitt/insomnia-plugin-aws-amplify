@@ -1,0 +1,25 @@
+{
+  // We use Prettier to format YAML and JSON
+  "[yaml]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // We override some Prettier settings to their default values in case the user has configured their vscode user
+  // settings
+  "prettier.enable": true,
+  "prettier.configPath": ".prettierrc.cjs",
+  "prettier.prettierPath": "./node_modules/prettier",
+  // We disable this because we don't want plugins that are installed by the user to screw with code unintentionally
+  "editor.formatOnSave": false,
+  // We use eslint to format TypeScript and Javascript
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.addMissingImports": true
+  },
+  "eslint.validate": ["javascript", "typescript"],
+  "typescript.tsdk": "node_modules/typescript/lib"
+}

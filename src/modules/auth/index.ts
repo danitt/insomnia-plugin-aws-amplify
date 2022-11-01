@@ -1,6 +1,11 @@
 import { Amplify, Auth } from 'aws-amplify';
 
-export type LoginUserResponse = { authId: string, userId?: string, idToken: string, accessToken: string };
+export type LoginUserResponse = {
+  authId: string;
+  userId?: string;
+  idToken: string;
+  accessToken: string;
+};
 
 export async function loginUser(
   Username: string,
@@ -34,5 +39,5 @@ export async function loginUser(
     userId,
     idToken,
     accessToken,
-  }
+  };
 }

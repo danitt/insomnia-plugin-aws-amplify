@@ -6,6 +6,6 @@
 **/*
 
 # Whitelist
-!plugin.js
+!app.js
 !README.md
-!yarn.lock
+!package-lock.json

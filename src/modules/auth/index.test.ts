@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { loginUser } from './auth';
+import { loginUser } from '.';
 
 dotenv.config();
 
