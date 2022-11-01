@@ -1,56 +1,86 @@
-import { PluginTemplateTag, PluginTemplateTagContext } from '../../types/template';
+import {
+  PluginTemplateTag,
+  PluginTemplateTagAction,
+  PluginTemplateTagContext,
+} from '../../types/template';
 import { loginUser, LoginUserResponse } from '../auth';
+import * as store from '../store';
 
-// Cache Intervals
-interface IStoreCache extends LoginUserResponse {
-  time: number;
-}
-export const rootAction: PluginTemplateTag['run'] = async (
+type RootActionArgs = [
+  Username: store.InputStore['Username'],
+  Password: store.InputStore['Password'],
+  Region: store.InputStore['Region'],
+  UserPoolId: store.InputStore['UserPoolId'],
+  ClientId: store.InputStore['ClientId'],
+  ReturnValue: 'accessToken' | 'idToken' | 'authId' | 'userId'
+];
+export const root: PluginTemplateTag['run'] = async (
   context: PluginTemplateTagContext,
-  Username: string,
-  Password: string,
-  Region: string,
-  UserPoolId: string,
-  ClientId: string,
-  CacheInterval: string,
-  ReturnValue: 'accessToken' | 'idToken' | 'authId' | 'userId',
+  ...args: RootActionArgs
 ): Promise<LoginUserResponse[keyof LoginUserResponse]> => {
-  const nowMs = new Date().getTime();
-  const cacheIntervalMs = Number(CacheInterval);
+  const [Username, Password, Region, UserPoolId, ClientId, ReturnValue] = args;
 
   // Validate Inputs
   const inputs = { Username, Password, Region, UserPoolId, ClientId };
   for (const [key, val] of Object.entries(inputs)) {
     if (val === undefined || val === '') {
-      throw Error(`${key} cannot be empty`);
+      return `${key} cannot be empty`;
     }
-  };
+  }
+
+  /**
+   * Update Store Inputs
+   *
+   * Note: this will typically be redundant, but it's the only opportunity
+   * to capture user input
+   */
+  await store.setInput(context.store, {
+    Username,
+    Password,
+    Region,
+    UserPoolId,
+    ClientId,
+  });
 
   // Restore cached auth
-  const storeKey = [Username, Password, Region, UserPoolId, ClientId].join(';');
-  const cacheDataStr = await context.store.getItem(storeKey);
-  if (cacheDataStr) {
-    const { time, ...loginResponse }: IStoreCache = JSON.parse(cacheDataStr);
-    const isValid = (time + cacheIntervalMs) >= nowMs;
-   if (isValid) {
-     console.info('Restoring from cache', { time, cacheIntervalMs, nowMs, loginResponse });
-     return loginResponse[ReturnValue];
-   }
+  const authStore = await store.getAuth(context.store);
+  if (!authStore) {
+    return 'No cached auth data found - please hit the "Authenticate" button';
   }
 
-  // Throttle Queries
-  const lastQueryTime = Number(await context.store.getItem('lastQueryTime'));
-  if (lastQueryTime && (lastQueryTime + 1000) > nowMs) {
-    throw Error('Auth queries /sec exceeded');
-  }
-  await context.store.setItem('lastQueryTime', String(nowMs));
+  return authStore.error ?? authStore[ReturnValue];
+};
 
-  // Request Auth
-  const loginResponse = await loginUser(Username, Password, Region, UserPoolId, ClientId);
-  const cacheData: IStoreCache = {
-    time: nowMs,
-    ...loginResponse
+export const authenticate: PluginTemplateTagAction['run'] = async (
+  context
+): Promise<void> => {
+  const inputStore = await store.getInput(context.store);
+  if (!inputStore) {
+    throw Error('Input credentials not found in cache');
   }
-  await context.store.setItem(storeKey, JSON.stringify(cacheData));
-  return loginResponse[ReturnValue];
-}
+  const { Username, Password, Region, UserPoolId, ClientId } = inputStore;
+  let authStore: store.AuthStore = {};
+  try {
+    const loginResponse = await loginUser(
+      Username,
+      Password,
+      Region,
+      UserPoolId,
+      ClientId
+    );
+    authStore = loginResponse;
+  } catch (error) {
+    console.error(error);
+    authStore.error =
+      error instanceof Error
+        ? error.message
+        : 'Unknown authentication error occured';
+  }
+  await store.setAuth(context.store, authStore);
+};
+
+export const clearCache: PluginTemplateTagAction['run'] = async (
+  context
+): Promise<void> => {
+  await store.clearAuth(context.store);
+};

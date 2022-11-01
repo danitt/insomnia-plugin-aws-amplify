@@ -1,31 +1,33 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Typings lifted from Insomnia source
  * @see https://github.com/Kong/insomnia
  */
 
+import { AppContext } from './app';
+import type { NunjucksParsedTagArg } from './plugin';
 import type { Request } from './request';
 import type { Response } from './response';
-import type { NunjucksParsedTagArg } from './plugin';
 
 export type PluginArgumentValue = string | number | boolean;
 
 type DisplayName = string | ((args: NunjucksParsedTagArg[]) => string);
 
-interface PluginArgumentBase {
+type PluginArgumentBase = {
   displayName: DisplayName;
   description?: string;
   help?: string;
   hide?: (args: NunjucksParsedTagArg[]) => boolean;
   /* Undocumented method */
   validate?: (arg: PluginArgumentValue) => string | null;
-}
+};
 
-export interface PluginArgumentEnumOption {
+export type PluginArgumentEnumOption = {
   displayName: DisplayName;
   value: PluginArgumentValue;
   description?: string;
   placeholder?: string;
-}
+};
 
 export type PluginArgumentEnum = PluginArgumentBase & {
   type: 'enum';
@@ -68,7 +70,8 @@ export type PluginArgument =
   | PluginArgumentFile
   | PluginArgumentNumber;
 
-export interface PluginTemplateTagContext {
+export type PluginTemplateTagContext = {
+  app: AppContext;
   util: {
     models: {
       request: {
@@ -76,15 +79,18 @@ export interface PluginTemplateTagContext {
       };
       response: {
         getLatestForRequestId: (id: string) => Promise<Response | null>;
-        getBodyBuffer: (response: Response, fallback?: any) => Promise<Buffer | null>;
+        getBodyBuffer: (
+          response: Response,
+          fallback?: any
+        ) => Promise<Buffer | null>;
       };
     };
   };
   /* Undocumented property */
   store: PluginStore;
-}
+};
 
-export interface PluginStore {
+export type PluginStore = {
   hasItem(arg0: string): Promise<boolean>;
   setItem(arg0: string, arg1: string): Promise<void>;
   getItem(arg0: string): Promise<string | null>;
@@ -96,19 +102,19 @@ export interface PluginStore {
       value: string;
     }[]
   >;
-}
+};
 
-export interface PluginTemplateTagActionContext {
+export type PluginTemplateTagActionContext = {
   store: PluginStore;
-}
+};
 
-export interface PluginTemplateTagAction {
+export type PluginTemplateTagAction = {
   name: string;
   icon?: string;
   run: (context: PluginTemplateTagActionContext) => Promise<void>;
-}
+};
 
-export interface PluginTemplateTag {
+export type PluginTemplateTag = {
   name: string;
   run: (context: PluginTemplateTagContext, ...arg: any[]) => Promise<any> | any;
   displayName: DisplayName;
@@ -119,5 +125,4 @@ export interface PluginTemplateTag {
   deprecated?: boolean;
   validate?: (value: any) => string | null;
   priority?: number;
-}
-
+};

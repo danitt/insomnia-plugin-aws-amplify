@@ -43,7 +43,6 @@ module.exports = {
     'unused-imports/no-unused-imports': 'error',
     'import/export': 'off', // Buggy: https://github.com/import-js/eslint-plugin-import/issues/2228
     eqeqeq: 2,
-    'no-console': 2,
     'no-unused-expressions': 2, // no short-circuit eval, e.g. `!!x && (() => ...)`
   },
 };
