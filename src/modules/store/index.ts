@@ -17,6 +17,7 @@ export type AuthStore = {
   idToken?: string;
   accessToken?: string;
   error?: string;
+  expiresAt?: number /** unix timestamp in ms */;
 };
 
 export async function getInput(

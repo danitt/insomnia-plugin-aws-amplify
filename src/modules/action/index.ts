@@ -48,6 +48,14 @@ export const root: PluginTemplateTag['run'] = async (
     return 'No cached auth data found - please hit the "Authenticate" button';
   }
 
+  // Validate expired auth
+  const nowMs = new Date().getTime();
+  const expiresAt = authStore.expiresAt ?? 0;
+  if (expiresAt < nowMs) {
+    console.info('Auth token expired, re-authenticating');
+    await authenticate(context);
+  }
+
   return authStore.error ?? authStore[ReturnValue];
 };
 
@@ -68,7 +76,14 @@ export const authenticate: PluginTemplateTagAction['run'] = async (
       UserPoolId,
       ClientId
     );
-    authStore = loginResponse;
+
+    // hardcoded token expiry - can make configurable in future if needed
+    const ONE_HOUR_MS = 1000 * 60 * 60;
+    const expiresAt = new Date().getTime() + ONE_HOUR_MS;
+    authStore = {
+      ...loginResponse,
+      expiresAt,
+    };
   } catch (error) {
     console.error(error);
     authStore.error =
