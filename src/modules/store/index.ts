@@ -1,63 +1,109 @@
 import { PluginStore } from '../../types/template';
 
-const AUTH_STORE_KEY = 'aws-amplify-auth';
-const INPUT_STORE_KEY = 'aws-amplify-input';
+import { RootStore, UserPoolCredentials } from './types';
 
-export type InputStore = {
-  Username: string;
-  Password: string;
-  Region: string;
-  UserPoolId: string;
-  ClientId: string;
-};
+const STORE_KEY_PREFIX = 'danitt-aws-amplify';
 
-export type AuthStore = {
-  authId?: string;
-  userId?: string;
-  idToken?: string;
-  accessToken?: string;
-  error?: string;
-  expiresAt?: number /** unix timestamp in ms */;
-};
+const initialStoreState: RootStore = {
+  input: {
+    username: '',
+    password: '',
+    region: '',
+    userPoolId: '',
+    clientId: '',
+  },
+  auth: {
+    pools: [],
+  },
+  error: {
+    message: undefined,
+  },
+} as const;
 
-export async function getInput(
-  store: PluginStore
-): Promise<InputStore | undefined> {
-  const str = await store.getItem(INPUT_STORE_KEY);
-  if (!str) {
-    return undefined;
+async function getStore(pluginStore: PluginStore): Promise<RootStore> {
+  const storeStr = await pluginStore.getItem(STORE_KEY_PREFIX);
+  if (storeStr) {
+    return JSON.parse(storeStr) as RootStore;
   }
-  return JSON.parse(str) as InputStore;
+  // Not exists, create and set initial
+  await setStore(pluginStore, initialStoreState);
+  return initialStoreState;
 }
 
-export async function getAuth(
-  store: PluginStore
-): Promise<AuthStore | undefined> {
-  const str = await store.getItem(AUTH_STORE_KEY);
-  if (!str) {
-    return undefined;
-  }
-  return JSON.parse(str) as AuthStore;
+async function setStore(
+  pluginStore: PluginStore,
+  state: RootStore
+): Promise<undefined> {
+  await pluginStore.setItem(STORE_KEY_PREFIX, JSON.stringify(state));
+}
+
+export async function getInput(
+  pluginStore: PluginStore
+): Promise<RootStore['input']> {
+  return (await getStore(pluginStore)).input;
 }
 
 export async function setInput(
-  store: PluginStore,
-  input: InputStore
+  pluginStore: PluginStore,
+  input: RootStore['input']
 ): Promise<void> {
-  await store.setItem(INPUT_STORE_KEY, JSON.stringify(input));
+  const store = await getStore(pluginStore);
+  store.input = input;
+  await setStore(pluginStore, store);
 }
 
-export async function setAuth(
-  store: PluginStore,
-  auth: AuthStore
+export async function getAuthPool(
+  pluginStore: PluginStore,
+  userPoolId: string
+): Promise<UserPoolCredentials | undefined> {
+  const store = await getStore(pluginStore);
+  return store.auth.pools.find((pool) => pool.userPoolId === userPoolId);
+}
+
+export async function setAuthPool(
+  pluginStore: PluginStore,
+  auth: UserPoolCredentials
 ): Promise<void> {
-  await store.setItem(AUTH_STORE_KEY, JSON.stringify(auth));
+  const store = await getStore(pluginStore);
+  await clearAuthPool(pluginStore, auth.userPoolId);
+  store.auth.pools.push(auth);
+  await setStore(pluginStore, store);
 }
 
-export async function clearInput(store: PluginStore): Promise<void> {
-  await store.removeItem(INPUT_STORE_KEY);
+export async function getError(
+  pluginStore: PluginStore
+): Promise<RootStore['error']> {
+  return (await getStore(pluginStore)).error;
 }
 
-export async function clearAuth(store: PluginStore): Promise<void> {
-  await store.removeItem(AUTH_STORE_KEY);
+export async function setError(
+  pluginStore: PluginStore,
+  error: RootStore['error']
+): Promise<void> {
+  const store = await getStore(pluginStore);
+  store.error = error;
+  await setStore(pluginStore, store);
+}
+
+export async function clearInput(pluginStore: PluginStore): Promise<void> {
+  const store = await getStore(pluginStore);
+  store.input = initialStoreState.input;
+  await setStore(pluginStore, store);
+}
+
+export async function clearAuthPool(
+  pluginStore: PluginStore,
+  userPoolId: string
+): Promise<void> {
+  const store = await getStore(pluginStore);
+  store.auth.pools = store.auth.pools.filter(
+    (pool) => pool.userPoolId !== userPoolId
+  );
+  await setStore(pluginStore, store);
+}
+
+export async function clearError(pluginStore: PluginStore): Promise<void> {
+  const store = await getStore(pluginStore);
+  store.error = initialStoreState.error;
+  await setStore(pluginStore, store);
 }

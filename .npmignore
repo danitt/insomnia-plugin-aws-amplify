@@ -7,5 +7,6 @@
 
 # Whitelist
 !app.js
+!icon.svg
 !README.md
 !package-lock.json

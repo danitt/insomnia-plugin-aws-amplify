@@ -3,26 +3,26 @@
  * @see https://github.com/Kong/insomnia
  */
 
-import { BaseModel } from "./model";
+import { BaseModel } from './model';
 
-export type RequestAuthentication = Record<string, any>;
+export type RequestAuthentication = Record<string, unknown>;
 
-export interface RequestHeader {
+export type RequestHeader = {
   name: string;
   value: string;
   description?: string;
   disabled?: boolean;
-}
+};
 
-export interface RequestParameter {
+export type RequestParameter = {
   name: string;
   value: string;
   disabled?: boolean;
   id?: string;
   fileName?: string;
-}
+};
 
-export interface RequestBodyParameter {
+export type RequestBodyParameter = {
   name: string;
   value: string;
   description?: string;
@@ -31,16 +31,16 @@ export interface RequestBodyParameter {
   id?: string;
   fileName?: string;
   type?: string;
-}
+};
 
-export interface RequestBody {
+export type RequestBody = {
   mimeType?: string | null;
   text?: string;
   fileName?: string;
   params?: RequestBodyParameter[];
-}
+};
 
-export interface BaseRequest {
+export type BaseRequest = {
   url: string;
   name: string;
   description: string;
@@ -58,6 +58,6 @@ export interface BaseRequest {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
-}
+};
 
 export type Request = BaseModel & BaseRequest;

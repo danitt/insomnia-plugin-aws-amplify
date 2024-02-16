@@ -3,16 +3,16 @@
  * @see https://github.com/Kong/insomnia
  */
 
-import { BaseModel } from "./model";
+import { BaseModel } from './model';
 
-export interface ResponseHeader {
+export type ResponseHeader = {
   name: string;
   value: string;
-}
+};
 
 type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
-export interface BaseResponse {
+export type BaseResponse = {
   environmentId: string | null;
   statusCode: number;
   statusMessage: string;
@@ -33,6 +33,6 @@ export interface BaseResponse {
   // Things from the request
   settingStoreCookies: boolean | null;
   settingSendCookies: boolean | null;
-}
+};
 
 export type Response = BaseModel & BaseResponse;

@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+
 import { loginUser } from '.';
 
 dotenv.config();
@@ -16,7 +17,7 @@ describe('Authenticates', () => {
       PASSWORD,
       REGION,
       USERPOOLID,
-      CLIENTID,
+      CLIENTID
     );
     expect(authId).toBeTruthy();
     expect(idToken).toBeTruthy();

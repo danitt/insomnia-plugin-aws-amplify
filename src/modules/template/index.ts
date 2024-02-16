@@ -22,32 +22,32 @@ export const rootTemplate: PluginTemplateTag[] = [
     ],
     args: [
       {
-        displayName: 'Username',
+        displayName: 'username',
         type: 'string',
         validate: (arg) => (arg ? '' : 'Required'),
       },
       {
-        displayName: 'Password',
+        displayName: 'password',
         type: 'string',
         validate: (arg) => (arg ? '' : 'Required'),
       },
       {
-        displayName: 'Region',
+        displayName: 'region',
         type: 'string',
         validate: (arg) => (arg ? '' : 'Required'),
       },
       {
-        displayName: 'UserPoolId',
+        displayName: 'userPoolId',
         type: 'string',
         validate: (arg) => (arg ? '' : 'Required'),
       },
       {
-        displayName: 'ClientId',
+        displayName: 'clientId',
         type: 'string',
         validate: (arg) => (arg ? '' : 'Required'),
       },
       {
-        displayName: 'ReturnValue',
+        displayName: 'returnValue',
         type: 'enum',
         validate: (arg) => (arg ? '' : 'Required'),
         defaultValue: 'accessToken',

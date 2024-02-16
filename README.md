@@ -2,11 +2,14 @@
 
 [![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/danitt)
 
-[Insomnia](https://insomnia.rest) plugin for signing in via AWS Amplify.
+[Insomnia](https://insomnia.rest) plugin for signing in via AWS Amplify
 
-Inspired by [insomnia-plugin-aws-amplify-auth](https://github.com/mbise1993/insomnia-plugin-aws-amplify-auth), with the following enhancements added:
+**Key Features**
+- Environment configuration GUI to input Amplify credentials.
+- Automatic token caching and flexible expiry options.
+- Customisable return properties (Access Token, ID Token, User ID, Auth ID).
+- Multiple user pool support across environments.
 
-- plugin dependencies are now bundled, and no longer crashes on install when react-native is not globally available
-- authentication returns JWT access token, as opposed to generated cookies
-- flexible token caching expiry options added
-- customisable return properties
+## Installation
+1. Open Insomnia and go to plugin settings.
+2. Add `insomnia-plugin-aws-amplify`.

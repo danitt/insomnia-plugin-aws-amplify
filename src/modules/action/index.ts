@@ -6,24 +6,26 @@ import {
 import { loginUser, LoginUserResponse } from '../auth';
 import * as store from '../store';
 
+type ReturnValue = 'accessToken' | 'idToken' | 'authId' | 'userId';
 type RootActionArgs = [
-  Username: store.InputStore['Username'],
-  Password: store.InputStore['Password'],
-  Region: store.InputStore['Region'],
-  UserPoolId: store.InputStore['UserPoolId'],
-  ClientId: store.InputStore['ClientId'],
-  ReturnValue: 'accessToken' | 'idToken' | 'authId' | 'userId'
+  username: string,
+  password: string,
+  region: string,
+  userPoolId: string,
+  clientId: string,
+  ReturnValue
 ];
+
 export const root: PluginTemplateTag['run'] = async (
   context: PluginTemplateTagContext,
   ...args: RootActionArgs
 ): Promise<LoginUserResponse[keyof LoginUserResponse]> => {
-  const [Username, Password, Region, UserPoolId, ClientId, ReturnValue] = args;
+  const [username, password, region, userPoolId, clientId, returnValue] = args;
 
   // Validate Inputs
-  const inputs = { Username, Password, Region, UserPoolId, ClientId };
+  const inputs = { username, password, region, userPoolId, clientId };
   for (const [key, val] of Object.entries(inputs)) {
-    if (val === undefined || val === '') {
+    if (!val) {
       return `${key} cannot be empty`;
     }
   }
@@ -35,28 +37,30 @@ export const root: PluginTemplateTag['run'] = async (
    * to capture user input
    */
   await store.setInput(context.store, {
-    Username,
-    Password,
-    Region,
-    UserPoolId,
-    ClientId,
+    username,
+    password,
+    region,
+    userPoolId,
+    clientId,
   });
 
   // Restore cached auth
-  const authStore = await store.getAuth(context.store);
-  if (!authStore) {
+  const authStorePool = await store.getAuthPool(context.store, userPoolId);
+  if (!authStorePool) {
     return 'No cached auth data found - please hit the "Authenticate" button';
   }
 
   // Validate expired auth
   const nowMs = new Date().getTime();
-  const expiresAt = authStore.expiresAt ?? 0;
+  const expiresAt = authStorePool.expiresAt ?? 0;
   if (expiresAt < nowMs) {
     console.info('Auth token expired, re-authenticating');
     await authenticate(context);
   }
 
-  return authStore.error ?? authStore[ReturnValue];
+  const error = await store.getError(context.store);
+
+  return error.message ?? authStorePool[returnValue];
 };
 
 export const authenticate: PluginTemplateTagAction['run'] = async (
@@ -66,36 +70,44 @@ export const authenticate: PluginTemplateTagAction['run'] = async (
   if (!inputStore) {
     throw Error('Input credentials not found in cache');
   }
-  const { Username, Password, Region, UserPoolId, ClientId } = inputStore;
-  let authStore: store.AuthStore = {};
+  const { username, password, region, userPoolId, clientId } = inputStore;
   try {
     const loginResponse = await loginUser(
-      Username,
-      Password,
-      Region,
-      UserPoolId,
-      ClientId
+      username,
+      password,
+      region,
+      userPoolId,
+      clientId
     );
 
     // hardcoded token expiry - can make configurable in future if needed
     const ONE_HOUR_MS = 1000 * 60 * 60;
     const expiresAt = new Date().getTime() + ONE_HOUR_MS;
-    authStore = {
+    await store.setAuthPool(context.store, {
       ...loginResponse,
+      userPoolId,
       expiresAt,
-    };
+    });
+    await store.clearError(context.store);
   } catch (error) {
     console.error(error);
-    authStore.error =
+    const message =
       error instanceof Error
         ? error.message
         : 'Unknown authentication error occured';
+    await store.setError(context.store, {
+      message,
+    });
+    await store.clearAuthPool(context.store, userPoolId);
   }
-  await store.setAuth(context.store, authStore);
 };
 
 export const clearCache: PluginTemplateTagAction['run'] = async (
   context
 ): Promise<void> => {
-  await store.clearAuth(context.store);
+  const inputStore = await store.getInput(context.store);
+  if (!inputStore) {
+    throw Error('Input credentials not found in cache');
+  }
+  await store.clearAuthPool(context.store, inputStore.userPoolId);
 };

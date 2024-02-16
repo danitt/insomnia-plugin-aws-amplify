@@ -3,7 +3,7 @@
  * @see https://github.com/Kong/insomnia
  */
 
-export interface BaseModel {
+export type BaseModel = {
   _id: string;
   type: string;
   // TSCONVERSION -- parentId is always required for all models, except 4:
@@ -14,4 +14,4 @@ export interface BaseModel {
   created: number;
   isPrivate: boolean;
   name: string;
-}
+};
