@@ -1,0 +1,5 @@
+{
+  "name": "@teapot/insomnia-plugin-aws",
+  "version": "0.1.0",
+  "exports": "./src/app.ts"
+}
