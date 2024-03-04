@@ -68,6 +68,10 @@ export const rootTemplate: PluginTemplateTag[] = [
             displayName: 'UserId',
             value: 'userId',
           },
+          {
+            displayName: 'JSON',
+            value: 'json',
+          },
         ],
       },
     ],

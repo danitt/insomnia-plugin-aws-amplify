@@ -6,7 +6,7 @@ import {
 import { loginUser, LoginUserResponse } from '../auth';
 import * as store from '../store';
 
-type ReturnValue = 'accessToken' | 'idToken' | 'authId' | 'userId';
+type ReturnValue = 'accessToken' | 'idToken' | 'authId' | 'userId' | 'json';
 type RootActionArgs = [
   username: string,
   password: string,
@@ -59,6 +59,14 @@ export const root: PluginTemplateTag['run'] = async (
   }
 
   const error = await store.getError(context.store);
+
+  if (error.message) {
+    return error.message;
+  }
+
+  if (returnValue === 'json') {
+    return JSON.stringify(authStorePool);
+  }
 
   return error.message ?? authStorePool[returnValue];
 };
