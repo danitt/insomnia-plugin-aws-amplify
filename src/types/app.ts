@@ -12,7 +12,7 @@ export type AppContext = {
     options?: Pick<
       PromptModalOptions,
       'label' | 'defaultValue' | 'submitName' | 'cancelable'
-    >
+    >,
   ) => Promise<string>;
   getPath: (name: string) => string;
   getInfo: () => AppInfo;
@@ -23,7 +23,7 @@ export type AppContext = {
    */
   showGenericModalDialog: (
     title: string,
-    options?: ShowGenericModalDialogOptions
+    options?: ShowGenericModalDialogOptions,
   ) => void;
 };
 

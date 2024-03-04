@@ -13,7 +13,7 @@ type RootActionArgs = [
   region: string,
   userPoolId: string,
   clientId: string,
-  ReturnValue
+  ReturnValue,
 ];
 
 export const root: PluginTemplateTag['run'] = async (
@@ -64,7 +64,7 @@ export const root: PluginTemplateTag['run'] = async (
 };
 
 export const authenticate: PluginTemplateTagAction['run'] = async (
-  context
+  context,
 ): Promise<void> => {
   const inputStore = await store.getInput(context.store);
   if (!inputStore) {
@@ -77,7 +77,7 @@ export const authenticate: PluginTemplateTagAction['run'] = async (
       password,
       region,
       userPoolId,
-      clientId
+      clientId,
     );
 
     // hardcoded token expiry - can make configurable in future if needed
@@ -103,7 +103,7 @@ export const authenticate: PluginTemplateTagAction['run'] = async (
 };
 
 export const clearCache: PluginTemplateTagAction['run'] = async (
-  context
+  context,
 ): Promise<void> => {
   const inputStore = await store.getInput(context.store);
   if (!inputStore) {

@@ -17,7 +17,7 @@ describe('Authenticates', () => {
       PASSWORD,
       REGION,
       USERPOOLID,
-      CLIENTID
+      CLIENTID,
     );
     expect(authId).toBeTruthy();
     expect(idToken).toBeTruthy();

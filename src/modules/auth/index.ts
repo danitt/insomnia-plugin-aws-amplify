@@ -12,7 +12,7 @@ export async function loginUser(
   password: string,
   region: string,
   userPoolId: string,
-  clientId: string
+  clientId: string,
 ): Promise<LoginUserResponse> {
   Amplify.configure({
     Auth: {

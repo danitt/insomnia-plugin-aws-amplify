@@ -32,20 +32,20 @@ async function getStore(pluginStore: PluginStore): Promise<RootStore> {
 
 async function setStore(
   pluginStore: PluginStore,
-  state: RootStore
+  state: RootStore,
 ): Promise<undefined> {
   await pluginStore.setItem(STORE_KEY_PREFIX, JSON.stringify(state));
 }
 
 export async function getInput(
-  pluginStore: PluginStore
+  pluginStore: PluginStore,
 ): Promise<RootStore['input']> {
   return (await getStore(pluginStore)).input;
 }
 
 export async function setInput(
   pluginStore: PluginStore,
-  input: RootStore['input']
+  input: RootStore['input'],
 ): Promise<void> {
   const store = await getStore(pluginStore);
   store.input = input;
@@ -54,7 +54,7 @@ export async function setInput(
 
 export async function getAuthPool(
   pluginStore: PluginStore,
-  userPoolId: string
+  userPoolId: string,
 ): Promise<UserPoolCredentials | undefined> {
   const store = await getStore(pluginStore);
   return store.auth.pools.find((pool) => pool.userPoolId === userPoolId);
@@ -62,7 +62,7 @@ export async function getAuthPool(
 
 export async function setAuthPool(
   pluginStore: PluginStore,
-  auth: UserPoolCredentials
+  auth: UserPoolCredentials,
 ): Promise<void> {
   const store = await getStore(pluginStore);
   await clearAuthPool(pluginStore, auth.userPoolId);
@@ -71,14 +71,14 @@ export async function setAuthPool(
 }
 
 export async function getError(
-  pluginStore: PluginStore
+  pluginStore: PluginStore,
 ): Promise<RootStore['error']> {
   return (await getStore(pluginStore)).error;
 }
 
 export async function setError(
   pluginStore: PluginStore,
-  error: RootStore['error']
+  error: RootStore['error'],
 ): Promise<void> {
   const store = await getStore(pluginStore);
   store.error = error;
@@ -93,11 +93,11 @@ export async function clearInput(pluginStore: PluginStore): Promise<void> {
 
 export async function clearAuthPool(
   pluginStore: PluginStore,
-  userPoolId: string
+  userPoolId: string,
 ): Promise<void> {
   const store = await getStore(pluginStore);
   store.auth.pools = store.auth.pools.filter(
-    (pool) => pool.userPoolId !== userPoolId
+    (pool) => pool.userPoolId !== userPoolId,
   );
   await setStore(pluginStore, store);
 }

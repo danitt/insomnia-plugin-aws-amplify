@@ -81,7 +81,7 @@ export type PluginTemplateTagContext = {
         getLatestForRequestId: (id: string) => Promise<Response | null>;
         getBodyBuffer: (
           response: Response,
-          fallback?: any
+          fallback?: any,
         ) => Promise<Buffer | null>;
       };
     };
