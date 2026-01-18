@@ -47,6 +47,22 @@ export const rootTemplate: PluginTemplateTag[] = [
         validate: (arg) => (arg ? '' : 'Required'),
       },
       {
+        displayName: 'Provider',
+        type: 'enum',
+        validate: (arg) => (arg ? '' : 'Required'),
+        defaultValue: 'amplify',
+        options: [
+          {
+            displayName: 'AWS Amplify',
+            value: 'amplify',
+          },
+          {
+            displayName: 'Cognito Identity Provider',
+            value: 'cognito',
+          },
+        ],
+      },
+      {
         displayName: 'returnValue',
         type: 'enum',
         validate: (arg) => (arg ? '' : 'Required'),

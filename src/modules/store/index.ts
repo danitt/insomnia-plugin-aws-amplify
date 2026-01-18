@@ -11,6 +11,7 @@ const initialStoreState: RootStore = {
     region: '',
     userPoolId: '',
     clientId: '',
+    provider: 'amplify',
   },
   auth: {
     pools: [],
