@@ -1,3 +1,5 @@
+import { execSync } from 'node:child_process';
+
 import {
   AdminInitiateAuthCommand,
   CognitoIdentityProviderClient,
@@ -51,8 +53,54 @@ export async function loginUserViaCognito(
   region: string,
   userPoolId: string,
   clientId: string,
+  awsProfile?: string,
 ): Promise<LoginUserResponse> {
-  const client = new CognitoIdentityProviderClient({ region });
+  // Validate and sanitize profile name to prevent command injection
+  const profileName = awsProfile?.trim() || '';
+
+  if (!profileName) {
+    throw new Error(
+      'AWS Profile is required for Cognito Identity Provider. ' +
+        'Please specify your AWS profile name (e.g., "staging").',
+    );
+  }
+
+  // Sanitize profile name: only allow alphanumeric, hyphens, underscores
+  if (!/^[a-zA-Z0-9_-]+$/.test(profileName)) {
+    throw new Error(
+      `Invalid AWS profile name: "${profileName}". ` +
+        'Profile names can only contain letters, numbers, hyphens, and underscores.',
+    );
+  }
+
+  // Get credentials from AWS CLI - this reliably works with SSO profiles
+  let credentials;
+  try {
+    const output = execSync(
+      `aws configure export-credentials --profile ${profileName} --format process`,
+      {
+        encoding: 'utf-8',
+        timeout: 5000, // 5 seconds timeout
+      },
+    );
+    const creds = JSON.parse(output);
+    credentials = {
+      accessKeyId: creds.AccessKeyId,
+      secretAccessKey: creds.SecretAccessKey,
+      sessionToken: creds.SessionToken,
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to load AWS credentials for profile "${profileName}". ` +
+        `Make sure you have run 'aws sso login --profile ${profileName}' and have valid credentials. ` +
+        `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  const client = new CognitoIdentityProviderClient({
+    region,
+    credentials,
+  });
 
   const command = new AdminInitiateAuthCommand({
     AuthFlow: 'ADMIN_USER_PASSWORD_AUTH',
@@ -67,7 +115,7 @@ export async function loginUserViaCognito(
   const response = await client.send(command);
   const authResult = response.AuthenticationResult;
 
-  if (!authResult || !authResult.IdToken || !authResult.AccessToken) {
+  if (!authResult?.IdToken || !authResult.AccessToken) {
     throw new Error(
       `Invalid auth response: ${JSON.stringify(response, null, 2)}`,
     );

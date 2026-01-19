@@ -63,6 +63,17 @@ export const rootTemplate: PluginTemplateTag[] = [
         ],
       },
       {
+        displayName: 'awsProfile',
+        type: 'string',
+        defaultValue: 'staging',
+        help: 'Run "aws sso login --profile <name>" first, and use the same profile name here.',
+        hide: (args) => {
+          // Only show this field when provider is 'cognito'
+          const providerArg = args[5];
+          return providerArg?.value !== 'cognito';
+        },
+      },
+      {
         displayName: 'returnValue',
         type: 'enum',
         validate: (arg) => (arg ? '' : 'Required'),

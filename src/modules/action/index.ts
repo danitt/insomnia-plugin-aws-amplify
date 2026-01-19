@@ -15,6 +15,7 @@ type RootActionArgs = [
   userPoolId: string,
   clientId: string,
   provider: Provider,
+  awsProfile: string,
   returnValue: ReturnValue,
 ];
 
@@ -29,6 +30,7 @@ export const root: PluginTemplateTag['run'] = async (
     userPoolId,
     clientId,
     provider,
+    awsProfile,
     returnValue,
   ] = args;
 
@@ -53,6 +55,7 @@ export const root: PluginTemplateTag['run'] = async (
     userPoolId,
     clientId,
     provider,
+    awsProfile,
   });
 
   // Restore cached auth
@@ -89,8 +92,15 @@ export const authenticate: PluginTemplateTagAction['run'] = async (
   if (!inputStore) {
     throw Error('Input credentials not found in cache');
   }
-  const { username, password, region, userPoolId, clientId, provider } =
-    inputStore;
+  const {
+    username,
+    password,
+    region,
+    userPoolId,
+    clientId,
+    provider,
+    awsProfile,
+  } = inputStore;
 
   try {
     const loginResponse =
@@ -102,6 +112,7 @@ export const authenticate: PluginTemplateTagAction['run'] = async (
             region,
             userPoolId,
             clientId,
+            awsProfile,
           );
 
     // hardcoded token expiry - can make configurable in future if needed
