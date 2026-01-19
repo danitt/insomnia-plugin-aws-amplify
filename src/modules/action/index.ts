@@ -3,24 +3,34 @@ import {
   PluginTemplateTagAction,
   PluginTemplateTagContext,
 } from '../../types/template';
-import { loginUser, LoginUserResponse } from '../auth';
+import { loginUser, LoginUserResponse, loginUserViaCognito } from '../auth';
 import * as store from '../store';
 
 type ReturnValue = 'accessToken' | 'idToken' | 'authId' | 'userId' | 'json';
+type Provider = 'amplify' | 'cognito';
 type RootActionArgs = [
   username: string,
   password: string,
   region: string,
   userPoolId: string,
   clientId: string,
-  ReturnValue,
+  provider: Provider,
+  returnValue: ReturnValue,
 ];
 
 export const root: PluginTemplateTag['run'] = async (
   context: PluginTemplateTagContext,
   ...args: RootActionArgs
 ): Promise<LoginUserResponse[keyof LoginUserResponse]> => {
-  const [username, password, region, userPoolId, clientId, returnValue] = args;
+  const [
+    username,
+    password,
+    region,
+    userPoolId,
+    clientId,
+    provider,
+    returnValue,
+  ] = args;
 
   // Validate Inputs
   const inputs = { username, password, region, userPoolId, clientId };
@@ -42,6 +52,7 @@ export const root: PluginTemplateTag['run'] = async (
     region,
     userPoolId,
     clientId,
+    provider,
   });
 
   // Restore cached auth
@@ -78,15 +89,20 @@ export const authenticate: PluginTemplateTagAction['run'] = async (
   if (!inputStore) {
     throw Error('Input credentials not found in cache');
   }
-  const { username, password, region, userPoolId, clientId } = inputStore;
+  const { username, password, region, userPoolId, clientId, provider } =
+    inputStore;
+
   try {
-    const loginResponse = await loginUser(
-      username,
-      password,
-      region,
-      userPoolId,
-      clientId,
-    );
+    const loginResponse =
+      provider === 'amplify'
+        ? await loginUser(username, password, region, userPoolId, clientId)
+        : await loginUserViaCognito(
+            username,
+            password,
+            region,
+            userPoolId,
+            clientId,
+          );
 
     // hardcoded token expiry - can make configurable in future if needed
     const ONE_HOUR_MS = 1000 * 60 * 60;

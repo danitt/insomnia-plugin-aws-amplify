@@ -4,6 +4,7 @@ export type InputStore = {
   region: string;
   userPoolId: string;
   clientId: string;
+  provider: 'amplify' | 'cognito';
 };
 
 export type AuthStore = {
