@@ -5,6 +5,7 @@ export type InputStore = {
   userPoolId: string;
   clientId: string;
   provider: 'amplify' | 'cognito';
+  awsProfile?: string;
 };
 
 export type AuthStore = {
