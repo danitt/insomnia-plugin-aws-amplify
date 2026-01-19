@@ -29,7 +29,7 @@
     "start": "nodemon",
     "build": "esbuild src/app.ts --bundle --platform=node --target=node14 --outfile=app.js",
     "prepare": "npm run build",
-    "test": "jest"
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" npx jest"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
