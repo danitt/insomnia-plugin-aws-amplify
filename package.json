@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-aws-amplify",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Insomnia plugin for signing in via AWS Amplify",
   "author": "Dan <dan@fate.org.au>",
   "license": "ISC",
@@ -52,5 +52,8 @@
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "amazon-cognito-identity-js": "^6.3.16"
   }
 }
