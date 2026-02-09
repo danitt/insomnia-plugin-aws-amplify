@@ -1,10 +1,74 @@
-import { execSync } from 'node:child_process';
+import { execSync } from 'child_process';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 import {
   AdminInitiateAuthCommand,
   CognitoIdentityProviderClient,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { Amplify, Auth } from 'aws-amplify';
+
+/**
+ * Locates the AWS CLI executable by checking common installation paths.
+ * Falls back to 'aws' if not found (assumes it's in PATH).
+ *
+ * @returns Full path to AWS CLI or 'aws' as fallback
+ */
+function findAwsCli(): string {
+  const commonPaths = [
+    '/usr/local/bin/aws', // Homebrew (Intel)
+    '/opt/homebrew/bin/aws', // Homebrew (Apple Silicon)
+    '/usr/bin/aws', // System default
+    '/usr/local/aws-cli/aws', // Manual installation
+  ];
+
+  for (const path of commonPaths) {
+    if (existsSync(path)) {
+      return path;
+    }
+  }
+
+  // Fallback to PATH lookup
+  return 'aws';
+}
+
+function detectAwsProfile(): string | null {
+  try {
+    const homeDir = process.env.HOME || process.env.USERPROFILE;
+    if (!homeDir) return null;
+
+    // Get current AWS account ID from active session
+    const awsCli = findAwsCli();
+    const accountId = execSync(
+      `${awsCli} sts get-caller-identity --query Account --output text`,
+      { encoding: 'utf-8', timeout: 10000 },
+    ).trim();
+
+    if (!accountId) return null;
+
+    // Parse ~/.aws/config to find matching profile
+    const configPath = join(homeDir, '.aws', 'config');
+    const configContent = readFileSync(configPath, 'utf-8');
+
+    let currentProfile: string | null = null;
+    for (const line of configContent.split('\n')) {
+      const profileMatch = line.match(/\[profile ([^\]]+)\]/);
+      if (profileMatch) {
+        currentProfile = profileMatch[1];
+      } else if (
+        currentProfile &&
+        line.includes('sso_account_id') &&
+        line.includes(accountId)
+      ) {
+        return currentProfile;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export type LoginUserResponse = {
   authId: string;
@@ -55,47 +119,20 @@ export async function loginUserViaCognito(
   clientId: string,
   awsProfile?: string,
 ): Promise<LoginUserResponse> {
-  // Validate and sanitize profile name to prevent command injection
-  const profileName = awsProfile?.trim() || '';
+  const profileName = detectAwsProfile() || awsProfile?.trim() || 'staging';
 
-  if (!profileName) {
-    throw new Error(
-      'AWS Profile is required for Cognito Identity Provider. ' +
-        'Please specify your AWS profile name (e.g., "staging").',
-    );
-  }
+  const awsCli = findAwsCli();
+  const output = execSync(
+    `${awsCli} configure export-credentials --profile ${profileName} --format process`,
+    { encoding: 'utf-8', timeout: 10000 },
+  );
 
-  // Sanitize profile name: only allow alphanumeric, hyphens, underscores
-  if (!/^[a-zA-Z0-9_-]+$/.test(profileName)) {
-    throw new Error(
-      `Invalid AWS profile name: "${profileName}". ` +
-        'Profile names can only contain letters, numbers, hyphens, and underscores.',
-    );
-  }
-
-  // Get credentials from AWS CLI - this reliably works with SSO profiles
-  let credentials;
-  try {
-    const output = execSync(
-      `aws configure export-credentials --profile ${profileName} --format process`,
-      {
-        encoding: 'utf-8',
-        timeout: 5000, // 5 seconds timeout
-      },
-    );
-    const creds = JSON.parse(output);
-    credentials = {
-      accessKeyId: creds.AccessKeyId,
-      secretAccessKey: creds.SecretAccessKey,
-      sessionToken: creds.SessionToken,
-    };
-  } catch (error) {
-    throw new Error(
-      `Failed to load AWS credentials for profile "${profileName}". ` +
-        `Make sure you have run 'aws sso login --profile ${profileName}' and have valid credentials. ` +
-        `Error: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const creds = JSON.parse(output);
+  const credentials = {
+    accessKeyId: creds.AccessKeyId,
+    secretAccessKey: creds.SecretAccessKey,
+    sessionToken: creds.SessionToken,
+  };
 
   const client = new CognitoIdentityProviderClient({
     region,
